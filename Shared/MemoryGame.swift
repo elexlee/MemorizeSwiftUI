@@ -10,7 +10,10 @@ import Foundation
 struct MemoryGame<CardContent> where CardContent: Equatable {
     private(set) var cards: Array<Card>
     
-    private var faceUpCardIndex: Int?
+    private var faceUpCardIndex: Int? {
+        get { cards.indices.filter( { cards[$0].isFaceUp } ).oneAndOnly }
+        set { cards.indices.forEach { cards[$0].isFaceUp = ($0 == newValue) } }
+    }
     
     mutating func choose(_ card: Card) {
         guard let chosenIndex = cards.firstIndex(where: { $0.id == card.id }),
@@ -21,17 +24,10 @@ struct MemoryGame<CardContent> where CardContent: Equatable {
                 cards[faceupIndex].isMatched = true
                 cards[chosenIndex].isMatched = true
             }
-            faceUpCardIndex = nil
+            cards[chosenIndex].isFaceUp = true
         } else {
-            for index in cards.indices {
-                cards[index].isFaceUp = false
-//                if !cards[index].isMatched {
-//                    cards[index].isFaceUp = false
-//                }
-            }
             faceUpCardIndex = chosenIndex
         }
-        cards[chosenIndex].isFaceUp.toggle()
         print("chosenCard = \(cards[chosenIndex].content)")
     }
     
@@ -45,7 +41,7 @@ struct MemoryGame<CardContent> where CardContent: Equatable {
     }
     
     init(numberOfPairsOfCards: Int, createCardContent: (Int) -> CardContent) {
-        cards = Array<Card>()
+        cards = []
         
         // add numberOfPairsOfCards * 2 to cards array
         for pairIndex in 0..<numberOfPairsOfCards {
@@ -56,9 +52,19 @@ struct MemoryGame<CardContent> where CardContent: Equatable {
     }
     
     struct Card: Identifiable {
-        var isFaceUp: Bool = false
-        var isMatched: Bool = false
-        var content: CardContent
-        var id: Int
+        var isFaceUp = false
+        var isMatched = false
+        let content: CardContent
+        let id: Int
+    }
+}
+
+extension Array {
+    var oneAndOnly: Element? {
+        if self.count == 1 {
+            return self.first
+        } else {
+            return nil
+        }
     }
 }
